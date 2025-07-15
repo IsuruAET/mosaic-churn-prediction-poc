@@ -7,3 +7,5 @@ joblib
 mysql-connector-python
 sqlalchemy
 requests
+openai
+python-dotenv

@@ -2,6 +2,11 @@ import streamlit as st
 import requests
 import sys
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from data.loader import fetch_customer_data
 
@@ -48,6 +53,7 @@ if submit:
             churn_prob = result['churn_probability']
             risk_segment = result['risk_segment']
             top_reasons = result['top_3_reasons']
+            ai_recommendations = result.get('ai_recommendations')
             
             # Risk visualization
             col1, col2, col3 = st.columns(3)
@@ -63,10 +69,48 @@ if submit:
                 else:
                     st.error(f"🚨 {risk_segment}")
             
-            # Top 3 contributing features
-            st.subheader("🔍 Top 3 Contributing Factors")
-            for i, reason in enumerate(top_reasons, 1):
-                st.write(f"{i}. **{reason}**")
+            # AI-Powered Recommendations Section
+            st.subheader("🤖 AI-Powered Recommendations")
+            
+            if ai_recommendations:
+                # Overall Strategy
+                if 'overall_strategy' in ai_recommendations:
+                    st.info(f"**Overall Strategy:** {ai_recommendations['overall_strategy']}")
+                
+                # Recommendations for each factor
+                if 'recommendations' in ai_recommendations:
+                    for i, factor in enumerate(top_reasons, 1):
+                        if factor in ai_recommendations['recommendations']:
+                            factor_data = ai_recommendations['recommendations'][factor]
+                            
+                            # Create expandable section for each factor
+                            with st.expander(f"🔍 Factor {i}: {factor.replace('_', ' ').title()}", expanded=True):
+                                col1, col2 = st.columns([2, 1])
+                                
+                                with col1:
+                                    # Analysis
+                                    st.markdown(f"**Analysis:** {factor_data.get('analysis', 'No analysis available')}")
+                                    
+                                    # Recommendations
+                                    st.markdown("**Recommendations:**")
+                                    for j, rec in enumerate(factor_data.get('recommendations', []), 1):
+                                        st.markdown(f"• {rec}")
+                                
+                                with col2:
+                                    # Priority indicator
+                                    priority = factor_data.get('priority', 'medium')
+                                    if priority == 'high':
+                                        st.error("🔥 High Priority")
+                                    elif priority == 'medium':
+                                        st.warning("⚠️ Medium Priority")
+                                    else:
+                                        st.info("ℹ️ Low Priority")
+            else:
+                # Fallback to basic display
+                st.subheader("🔍 Top 3 Contributing Factors")
+                for i, reason in enumerate(top_reasons, 1):
+                    st.write(f"{i}. **{reason}**")
+                st.info("AI recommendations not available. Please check your OpenAI API key configuration.")
             
             # Progress bar for churn probability
             st.subheader("📊 Churn Risk Visualization")

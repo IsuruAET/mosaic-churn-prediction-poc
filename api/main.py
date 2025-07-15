@@ -3,6 +3,10 @@ from pydantic import BaseModel
 import logging
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add parent directory to path to import training module
 current_dir = Path(__file__).parent
@@ -10,6 +14,7 @@ parent_dir = current_dir.parent
 sys.path.append(str(parent_dir))
 
 from models.training import predict_churn_risk
+from app.openai_service import OpenAIRecommendationService
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +45,18 @@ def predict_churn(data: CustomerInput):
     try:
         # Use the enhanced prediction function
         result = predict_churn_risk(input_data)
+        
+        # Get AI recommendations for the contributing factors
+        try:
+            openai_service = OpenAIRecommendationService()
+            recommendations = openai_service.get_factor_recommendations(
+                result['top_3_reasons'], 
+                input_data
+            )
+            result['ai_recommendations'] = recommendations
+        except Exception as e:
+            logger.warning(f"Failed to get AI recommendations: {str(e)}")
+            result['ai_recommendations'] = None
         
         logger.info(f"Prediction result: {result}")
         return result
