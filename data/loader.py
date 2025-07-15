@@ -1,13 +1,9 @@
-import mysql.connector
 import pandas as pd
+from sqlalchemy import create_engine
 
 def fetch_customer_data():
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="root",
-        database="mosaic_rfm_test_db"
-    )
+    # Create SQLAlchemy engine for pandas compatibility
+    engine = create_engine('mysql+mysqlconnector://root:root@localhost/mosaic_rfm_test_db')
 
     query = """
     SELECT 
@@ -25,6 +21,5 @@ def fetch_customer_data():
     GROUP BY customer_id;
     """
 
-    df = pd.read_sql(query, conn)
-    conn.close()
+    df = pd.read_sql(query, engine)
     return df
