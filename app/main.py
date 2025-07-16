@@ -3,6 +3,7 @@ import requests
 import sys
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment variables from .env file
 load_dotenv()
@@ -17,6 +18,22 @@ st.subheader("📊 Customer Order History")
 
 # Display the dataframe
 st.dataframe(df, use_container_width=True, height=300)
+
+# CSV Download functionality
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+csv_filename = f"Mosaic_Test_Customer_Order_History_{timestamp}.csv"
+
+# Convert dataframe to CSV
+csv_data = df.to_csv(index=False)
+
+# Download button
+st.download_button(
+    label="📥 Download CSV",
+    data=csv_data,
+    file_name=csv_filename,
+    mime="text/csv",
+    help="Download the customer order history as a CSV file"
+)
 
 # Row selection with selectbox
 index = st.selectbox("Select Customer Row", range(len(df)), format_func=lambda x: f"Row {x} - Customer Data")
